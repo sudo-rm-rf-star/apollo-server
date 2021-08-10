@@ -22,6 +22,14 @@ function setHeaders(res: ServerResponse, headers: Object): void {
   });
 }
 
+// Parses the incoming request body as JSON and saves this within the body
+// field as a side-effect.
+async function getJson(req: MicroRequest): Promise<object> {
+  const body = await json(req);
+  req.body = body;
+  return body;
+}
+
 // Build and return an async function that passes incoming GraphQL requests
 // over to Apollo Server for processing, then fires the results/response back
 // using Micro's `send` functionality.
@@ -43,7 +51,7 @@ export function graphqlMicro(
     try {
       query =
         req.method === 'POST'
-          ? req.filePayload || (await json(req))
+          ? req.filePayload || (await getJson(req))
           : url.parse(req.url, true).query;
     } catch (error) {
       // Do nothing; `query` stays `undefined`
